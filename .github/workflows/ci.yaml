@@ -1,0 +1,62 @@
+on:
+  push:
+    branches:
+      - master
+
+env:
+  NAMESPACE: default
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    
+    # Connect to Azure Container registry (ACR)
+    - uses: azure/docker-login@v1
+      with:
+        login-server: ${{ secrets.CONTAINER_REGISTRY }}.azurecr.io
+        username: ${{ secrets.REGISTRY_USERNAME }} 
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+    
+    # Container build and push to a Azure Container registry (ACR)
+    - run: |
+        docker build . -t ${{ secrets.CONTAINER_REGISTRY }}.azurecr.io/nodejs-hello-world:${{ github.sha }}
+        docker push ${{ secrets.CONTAINER_REGISTRY }}.azurecr.io/nodejs-hello-world:${{ github.sha }}
+  
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    
+    # Set the target Azure Kubernetes Service (AKS) cluster. 
+    - uses: azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        cluster-name: ${{ secrets.CLUSTER_NAME }}
+        resource-group: ${{ secrets.RESOURCE_GROUP }}    
+    # Create namespace if doesn't exist
+    - run: |
+        kubectl create namespace ${{ env.NAMESPACE }} --dry-run -o json | kubectl apply -f -
+    
+    # Create imagepullsecret for Azure Container registry (ACR)
+    - uses: azure/k8s-create-secret@v1
+      with:
+        container-registry-url: ${{ secrets.CONTAINER_REGISTRY }}.azurecr.io
+        container-registry-username: ${{ secrets.REGISTRY_USERNAME }}
+        container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+        secret-name: helloworld-cluster-registry-connection
+        namespace: ${{ env.NAMESPACE }}
+    
+    # Deploy app to AKS
+    - uses: azure/k8s-deploy@v1
+      with:
+        manifests: |
+          manifests/deployment.yml
+          manifests/service.yml
+        images: |
+          ${{ secrets.CONTAINER_REGISTRY }}.azurecr.io/nodejs-hello-world:${{ github.sha }}
+        imagepullsecrets: |
+          helloworld-cluster-registry-connection
+        namespace: ${{ env.NAMESPACE }}
