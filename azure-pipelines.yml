@@ -14,7 +14,7 @@ variables:
   dockerRegistryServiceConnection: '299ec3ab-2b58-4667-9f9b-c732ca24d017'
   imageRepository: 'amitpurinodejsdocshelloworldactionaks'
   containerRegistry: 'amitpuri.azurecr.io'
-  dockerfilePath: 'Dockerfile'
+  dockerfilePath: '/Dockerfile'
   tag: '$(Build.BuildId)'
   imagePullSecret: 'amitpuri1845c8c0-auth'
 
