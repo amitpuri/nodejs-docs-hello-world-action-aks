@@ -11,12 +11,12 @@ resources:
 variables:
 
   # Container registry service connection established during pipeline creation
-  dockerRegistryServiceConnection: ''
-  imageRepository: ''
-  containerRegistry: '.azurecr.io'
+  dockerRegistryServiceConnection: '299ec3ab-2b58-4667-9f9b-c732ca24d017'
+  imageRepository: 'hello-world'
+  containerRegistry: 'amitpuri.azurecr.io'
   dockerfilePath: /**/dockerfile
   tag: '$(Build.BuildId)'
-  imagePullSecret: ''
+  imagePullSecret: 'amitpuri1845c8c0-auth'
 
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
@@ -53,7 +53,7 @@ stages:
     displayName: Deploy
     pool:
       vmImage: $(vmImageName)
-    environment: 'helloworldnodejsdocshelloworldactionaks-1343.default'
+    environment: 'hello-world-nodejsdocshelloworldactionaks-1343.default'
     strategy:
       runOnce:
         deploy:
