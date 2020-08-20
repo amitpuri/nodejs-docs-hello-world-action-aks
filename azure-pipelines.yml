@@ -53,7 +53,7 @@ stages:
     displayName: Deploy
     pool:
       vmImage: $(vmImageName)
-    environment: 'hello-world-nodejsdocshelloworldactionaks-1343.default'
+    environment: 'amitpurinodejsdocshelloworldactionaks-1343.default'
     strategy:
       runOnce:
         deploy:
