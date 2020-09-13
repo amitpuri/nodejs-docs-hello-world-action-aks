@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+    name: "amitpuridev-f183"
+    labels:
+        app: "amitpuridev-f183"
+spec:
+    type: LoadBalancer
+    ports:
+    - port: 1337
+      targetPort: 1337
+      protocol: TCP
+      name: http
+    selector:
+        app: "amitpuridev-f183"
