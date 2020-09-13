@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: "amitpuridev-f183"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: "amitpuridev-f183"
+  template:
+    metadata:
+      labels:
+        app: "amitpuridev-f183"
+    spec:
+      containers:
+        - name: "amitpuridev-f183"
+          image: "amitpuridev.azurecr.io/amitpuridev"
+          ports:
+          - containerPort: 1337
