@@ -1,0 +1,50 @@
+on: [push]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    
+    - uses: azure/docker-login@v1
+      with:
+        login-server: amitpuridev.azurecr.io
+        username: ${{ secrets.acr_amitpuridev_username }}
+        password: ${{ secrets.acr_amitpuridev_password }}
+    
+    - name: Build and push image to ACR
+      id: build-image
+      run: |
+        docker build "$GITHUB_WORKSPACE/" -f  "dockerfile" -t amitpuridev.azurecr.io/amitpuridev:${{ github.sha }}
+        docker push amitpuridev.azurecr.io/amitpuridev:${{ github.sha }}
+    
+    - uses: azure/k8s-set-context@v1
+      with:
+         kubeconfig: ${{ secrets.aks_amitpuridev_kubeConfig }}
+      id: login
+    
+    - name: Create namespace
+      run: |
+        namespacePresent=`kubectl get namespace | grep amitpuridev3ff4 | wc -l`
+        if [ $namespacePresent -eq 0 ]
+        then
+            echo `kubectl create namespace amitpuridev3ff4`
+        fi
+
+    - uses: azure/k8s-create-secret@v1
+      with:
+        namespace: amitpuridev3ff4
+        container-registry-url: amitpuridev.azurecr.io
+        container-registry-username: ${{ secrets.acr_amitpuridev_username }}
+        container-registry-password: ${{ secrets.acr_amitpuridev_password }}
+        secret-name: amitpuridevdockerauth
+       
+    - uses: azure/k8s-deploy@v1
+      with:
+        namespace: amitpuridev3ff4
+        manifests: |
+          manifests/deployment-1.yml
+          manifests/service-1.yml
+        images: |
+          amitpuridev.azurecr.io/amitpuridev:${{ github.sha }}
+        imagepullsecrets: |
+          amitpuridevdockerauth
